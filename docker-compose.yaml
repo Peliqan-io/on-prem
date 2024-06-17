@@ -1,0 +1,532 @@
+version: "3"
+
+services:
+  db:
+    # Please ensure the postgres-client's major version in the backend image is kept in
+    # sync with this major version so pg_dump remains compatible.
+    image: postgres:15.2
+    environment:
+      - POSTGRES_USER=${DATABASE_USER:-baserow}
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD:-baserow}
+      - POSTGRES_DB=${DATABASE_NAME:-baserow}
+    networks:
+      local:
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis/redis-stack-server:latest
+    networks:
+      local:
+
+  mjml:
+    image: liminspace/mjml-tcpserver:0.10
+    # mjml is based off the node image which creates a non root node user we can run as
+    user: "1000:1000"
+    networks:
+      local:
+
+  backend:
+    image: peliqan/backend:latest
+    environment:
+      - PELIQAN_WAREHOUSE_HOST=${PELIQAN_WAREHOUSE_HOST:-localhost}
+      - SINGER_POSTGRES_TARGET_HOST_WITHOUT_POOLER=${SINGER_POSTGRES_TARGET_HOST_WITHOUT_POOLER}
+      - PUBLIC_BACKEND_URL=${PUBLIC_BACKEND_URL:-http://localhost:8000}
+      - PUBLIC_WEB_FRONTEND_URL=${PUBLIC_WEB_FRONTEND_URL:-http://localhost:3000}
+      - MIGRATE_ON_STARTUP=${MIGRATE_ON_STARTUP:-true}
+      - LOAD_SERVER_DEFINITIONS=${LOAD_SERVER_DEFINITIONS:-false}
+      - SYNC_TEMPLATES_ON_STARTUP=${SYNC_TEMPLATES_ON_STARTUP:-true}
+      - DATABASE_USER=${DATABASE_USER:-baserow}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD:-baserow}
+      - DATABASE_NAME=${DATABASE_NAME:-baserow}
+      - ADDITIONAL_APPS
+      - MEDIA_URL=${MEDIA_URL:-http://localhost:4000/media/}
+      - EMAIL_SMTP
+      - EMAIL_SMTP_HOST
+      - EMAIL_SMTP_PORT
+      - EMAIL_SMTP_USE_TLS
+      - EMAIL_SMTP_USER
+      - EMAIL_SMTP_PASSWORD
+      - FROM_EMAIL
+      - EMAIL_VERIFY_SECRET_KEY=${EMAIL_VERIFY_SECRET_KEY}
+      - SLACK_SIGN_UP_NOTIFICATION_API=${SLACK_SIGN_UP_NOTIFICATION_API}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - SINGER_TARGET_SERVER_TYPE=${SINGER_TARGET_SERVER_TYPE}
+      - ENV=${ENV:-DEV}
+      - OAUTH_SECRET_KEY=${OAUTH_SECRET_KEY}
+      - AES_SECRET_KEY=${AES_SECRET_KEY}
+      - DD_SERVICE=backend
+      - MIXPANEL_API_TOKEN=${MIXPANEL_API_TOKEN}
+      - EXTRA_ALLOWED_HOSTS=${EXTRA_ALLOWED_HOSTS}
+      - PELIQAN_RESOURCE_LOGS_S3_AWS_ACCESS_KEY_ID=${PELIQAN_RESOURCE_LOGS_S3_AWS_ACCESS_KEY_ID}
+      - PELIQAN_RESOURCE_LOGS_S3_AWS_SECRET_ACCESS_KEY=${PELIQAN_RESOURCE_LOGS_S3_AWS_SECRET_ACCESS_KEY}
+      - PELIQAN_RESOURCE_LOGS_S3_AWS_REGION=${PELIQAN_RESOURCE_LOGS_S3_AWS_REGION}
+      - PELIQAN_RESOURCE_LOGS_S3_BUCKET_NAME=${PELIQAN_RESOURCE_LOGS_S3_BUCKET_NAME}
+      - DEV_ACCOUNT_TOKEN=${DEV_ACCOUNT_TOKEN}
+    ports:
+      - "${HOST_PUBLISH_IP:-127.0.0.1}:${BACKEND_PORT:-8000}:8000"
+    depends_on:
+      - db
+      - redis
+      - mjml
+      - media-volume-fixer
+      - trinocatalog-volume-fixer
+    volumes:
+      - media:/baserow/media
+      # Backend needs to create catalogs for Trino and config files for Singer
+      - trinocatalog:/etc/catalog
+      - singerconfig:/etc/singer_config
+      # Backend needs to create streamlit apps
+      - streamlit_apps:/etc/streamlit_apps
+      - connectors:/etc/connectors
+      - connector_icons:/etc/connector_icons
+      - singerDependencies:/etc/.virtualenvs/
+    networks:
+      local:
+
+  celery:
+    image: peliqan/backend:latest
+    environment:
+      - PELIQAN_WAREHOUSE_HOST=${PELIQAN_WAREHOUSE_HOST:-localhost}
+      - SINGER_POSTGRES_TARGET_HOST_WITHOUT_POOLER=${SINGER_POSTGRES_TARGET_HOST_WITHOUT_POOLER}
+      - PUBLIC_BACKEND_URL=${PUBLIC_BACKEND_URL:-http://localhost:8000}
+      - PUBLIC_WEB_FRONTEND_URL=${PUBLIC_WEB_FRONTEND_URL:-http://localhost:3000}
+      - MIGRATE_ON_STARTUP=${MIGRATE_ON_STARTUP:-true}
+      - LOAD_SERVER_DEFINITIONS=${LOAD_SERVER_DEFINITIONS:-true}
+      - SYNC_TEMPLATES_ON_STARTUP=${SYNC_TEMPLATES_ON_STARTUP:-true}
+      - DATABASE_USER=${DATABASE_USER:-baserow}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD:-baserow}
+      - DATABASE_NAME=${DATABASE_NAME:-baserow}
+      - ADDITIONAL_APPS
+      - MEDIA_URL=${MEDIA_URL:-http://localhost:4000/media/}
+      - EMAIL_SMTP
+      - EMAIL_SMTP_HOST
+      - EMAIL_SMTP_PORT
+      - EMAIL_SMTP_USE_TLS
+      - EMAIL_SMTP_USER
+      - EMAIL_SMTP_PASSWORD
+      - FROM_EMAIL
+      - SLACK_SIGN_UP_NOTIFICATION_API=${SLACK_SIGN_UP_NOTIFICATION_API}
+      - ENV=${ENV:-DEV}
+      - OAUTH_SECRET_KEY=${OAUTH_SECRET_KEY}
+      - AES_SECRET_KEY=${AES_SECRET_KEY}
+      - DD_SERVICE=celery
+      - MIXPANEL_API_TOKEN=${MIXPANEL_API_TOKEN}
+      - PELIQAN_RESOURCE_LOGS_S3_AWS_ACCESS_KEY_ID=${PELIQAN_RESOURCE_LOGS_S3_AWS_ACCESS_KEY_ID}
+      - PELIQAN_RESOURCE_LOGS_S3_AWS_SECRET_ACCESS_KEY=${PELIQAN_RESOURCE_LOGS_S3_AWS_SECRET_ACCESS_KEY}
+      - PELIQAN_RESOURCE_LOGS_S3_AWS_REGION=${PELIQAN_RESOURCE_LOGS_S3_AWS_REGION}
+      - PELIQAN_RESOURCE_LOGS_S3_BUCKET_NAME=${PELIQAN_RESOURCE_LOGS_S3_BUCKET_NAME}
+      - DEV_ACCOUNT_TOKEN=${DEV_ACCOUNT_TOKEN}
+    command: celery worker -l INFO -Q celery
+    depends_on:
+      - backend
+    volumes:
+      - media:/baserow/media
+      - connectors:/etc/connectors
+      - streamlit_apps:/etc/streamlit_apps
+    networks:
+      local:
+
+  celery-export-worker:
+    image: peliqan/backend:latest
+    command: celery worker -l INFO -Q export
+    depends_on:
+      - backend
+    environment:
+      - PELIQAN_WAREHOUSE_HOST=${PELIQAN_WAREHOUSE_HOST:-localhost}
+      - SINGER_POSTGRES_TARGET_HOST_WITHOUT_POOLER=${SINGER_POSTGRES_TARGET_HOST_WITHOUT_POOLER}
+      - PUBLIC_BACKEND_URL=${PUBLIC_BACKEND_URL:-http://localhost:8000}
+      - PUBLIC_WEB_FRONTEND_URL=${PUBLIC_WEB_FRONTEND_URL:-http://localhost:3000}
+      - MIGRATE_ON_STARTUP=${MIGRATE_ON_STARTUP:-true}
+      - LOAD_SERVER_DEFINITIONS=${LOAD_SERVER_DEFINITIONS:-true}
+      - SYNC_TEMPLATES_ON_STARTUP=${SYNC_TEMPLATES_ON_STARTUP:-true}
+      - DATABASE_USER=${DATABASE_USER:-baserow}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD:-baserow}
+      - DATABASE_NAME=${DATABASE_NAME:-baserow}
+      - ADDITIONAL_APPS
+      - MEDIA_URL=${MEDIA_URL:-http://localhost:4000/media/}
+      - EMAIL_SMTP
+      - EMAIL_SMTP_HOST
+      - EMAIL_SMTP_PORT
+      - EMAIL_SMTP_USE_TLS
+      - EMAIL_SMTP_USER
+      - EMAIL_SMTP_PASSWORD
+      - FROM_EMAIL
+      - ENV=${ENV:-DEV}
+      - OAUTH_SECRET_KEY=${OAUTH_SECRET_KEY}
+      - AES_SECRET_KEY=${AES_SECRET_KEY}
+      - DD_SERVICE=celery-export-worker
+      - PELIQAN_RESOURCE_LOGS_S3_AWS_ACCESS_KEY_ID=${PELIQAN_RESOURCE_LOGS_S3_AWS_ACCESS_KEY_ID}
+      - PELIQAN_RESOURCE_LOGS_S3_AWS_SECRET_ACCESS_KEY=${PELIQAN_RESOURCE_LOGS_S3_AWS_SECRET_ACCESS_KEY}
+      - PELIQAN_RESOURCE_LOGS_S3_AWS_REGION=${PELIQAN_RESOURCE_LOGS_S3_AWS_REGION}
+      - PELIQAN_RESOURCE_LOGS_S3_BUCKET_NAME=${PELIQAN_RESOURCE_LOGS_S3_BUCKET_NAME}
+    volumes:
+      - media:/baserow/media
+      - connectors:/etc/connectors
+    networks:
+      local:
+
+  celery-sync-worker:
+    image: peliqan/backend:latest
+    command: celery worker -l INFO -Q sync
+    depends_on:
+      - backend
+    environment:
+      - PELIQAN_WAREHOUSE_HOST=${PELIQAN_WAREHOUSE_HOST:-localhost}
+      - SINGER_POSTGRES_TARGET_HOST_WITHOUT_POOLER=${SINGER_POSTGRES_TARGET_HOST_WITHOUT_POOLER}
+      - PUBLIC_BACKEND_URL=${PUBLIC_BACKEND_URL:-http://localhost:8000}
+      - PUBLIC_WEB_FRONTEND_URL=${PUBLIC_WEB_FRONTEND_URL:-http://localhost:3000}
+      - MIGRATE_ON_STARTUP=${MIGRATE_ON_STARTUP:-true}
+      - LOAD_SERVER_DEFINITIONS=${LOAD_SERVER_DEFINITIONS:-true}
+      - SYNC_TEMPLATES_ON_STARTUP=${SYNC_TEMPLATES_ON_STARTUP:-true}
+      - DATABASE_USER=${DATABASE_USER:-baserow}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD:-baserow}
+      - DATABASE_NAME=${DATABASE_NAME:-baserow}
+      - SINGER_TARGET_SERVER_TYPE=${SINGER_TARGET_SERVER_TYPE}
+      - ADDITIONAL_APPS
+      - MEDIA_URL=${MEDIA_URL:-http://localhost:4000/media/}
+      - EMAIL_SMTP
+      - EMAIL_SMTP_HOST
+      - EMAIL_SMTP_PORT
+      - EMAIL_SMTP_USE_TLS
+      - EMAIL_SMTP_USER
+      - EMAIL_SMTP_PASSWORD
+      - FROM_EMAIL
+      - ENV=${ENV:-DEV}
+      - OAUTH_SECRET_KEY=${OAUTH_SECRET_KEY}
+      - AES_SECRET_KEY=${AES_SECRET_KEY}
+      - DD_SERVICE=celery-sync-worker
+      - PELIQAN_RESOURCE_LOGS_S3_AWS_ACCESS_KEY_ID=${PELIQAN_RESOURCE_LOGS_S3_AWS_ACCESS_KEY_ID}
+      - PELIQAN_RESOURCE_LOGS_S3_AWS_SECRET_ACCESS_KEY=${PELIQAN_RESOURCE_LOGS_S3_AWS_SECRET_ACCESS_KEY}
+      - PELIQAN_RESOURCE_LOGS_S3_AWS_REGION=${PELIQAN_RESOURCE_LOGS_S3_AWS_REGION}
+      - PELIQAN_RESOURCE_LOGS_S3_BUCKET_NAME=${PELIQAN_RESOURCE_LOGS_S3_BUCKET_NAME}
+    volumes:
+      - trinocatalog:/etc/catalog
+      - connectors:/etc/connectors
+    networks:
+      local:
+
+  celery-snapshot-worker:
+    image: peliqan/backend:latest
+    command: celery worker -l INFO -Q snapshot
+    depends_on:
+      - backend
+    environment:
+      - PELIQAN_WAREHOUSE_HOST=${PELIQAN_WAREHOUSE_HOST:-localhost}
+      - PUBLIC_BACKEND_URL=${PUBLIC_BACKEND_URL:-http://localhost:8000}
+      - PUBLIC_WEB_FRONTEND_URL=${PUBLIC_WEB_FRONTEND_URL:-http://localhost:3000}
+      - MIGRATE_ON_STARTUP=${MIGRATE_ON_STARTUP:-true}
+      - LOAD_SERVER_DEFINITIONS=${LOAD_SERVER_DEFINITIONS:-true}
+      - SYNC_TEMPLATES_ON_STARTUP=${SYNC_TEMPLATES_ON_STARTUP:-true}
+      - DATABASE_USER=${DATABASE_USER:-baserow}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD:-baserow}
+      - DATABASE_NAME=${DATABASE_NAME:-baserow}
+      - ADDITIONAL_APPS
+      - MEDIA_URL=${MEDIA_URL:-http://localhost:4000/media/}
+      - EMAIL_SMTP
+      - EMAIL_SMTP_HOST
+      - EMAIL_SMTP_PORT
+      - EMAIL_SMTP_USE_TLS
+      - EMAIL_SMTP_USER
+      - EMAIL_SMTP_PASSWORD
+      - FROM_EMAIL
+      - ENV=${ENV:-DEV}
+      - OAUTH_SECRET_KEY=${OAUTH_SECRET_KEY}
+      - AES_SECRET_KEY=${AES_SECRET_KEY}
+      - DD_SERVICE=celery-snapshot-worker
+      - PELIQAN_RESOURCE_LOGS_S3_AWS_ACCESS_KEY_ID=${PELIQAN_RESOURCE_LOGS_S3_AWS_ACCESS_KEY_ID}
+      - PELIQAN_RESOURCE_LOGS_S3_AWS_SECRET_ACCESS_KEY=${PELIQAN_RESOURCE_LOGS_S3_AWS_SECRET_ACCESS_KEY}
+      - PELIQAN_RESOURCE_LOGS_S3_AWS_REGION=${PELIQAN_RESOURCE_LOGS_S3_AWS_REGION}
+      - PELIQAN_RESOURCE_LOGS_S3_BUCKET_NAME=${PELIQAN_RESOURCE_LOGS_S3_BUCKET_NAME}
+    volumes:
+      - trinocatalog:/etc/catalog
+      - connectors:/etc/connectors
+    networks:
+      local:
+
+  celery-container-factory-worker:
+    image: peliqan/backend:latest
+    command: celery worker -l INFO -Q container-factory
+    depends_on:
+      - backend
+    environment:
+      - PELIQAN_WAREHOUSE_HOST=${PELIQAN_WAREHOUSE_HOST:-localhost}
+      - PUBLIC_BACKEND_URL=${PUBLIC_BACKEND_URL:-http://localhost:8000}
+      - PUBLIC_WEB_FRONTEND_URL=${PUBLIC_WEB_FRONTEND_URL:-http://localhost:3000}
+      - MIGRATE_ON_STARTUP=${MIGRATE_ON_STARTUP:-true}
+      - LOAD_SERVER_DEFINITIONS=${LOAD_SERVER_DEFINITIONS:-true}
+      - SYNC_TEMPLATES_ON_STARTUP=${SYNC_TEMPLATES_ON_STARTUP:-true}
+      - DATABASE_USER=${DATABASE_USER:-baserow}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD:-baserow}
+      - DATABASE_NAME=${DATABASE_NAME:-baserow}
+      - ADDITIONAL_APPS
+      - MEDIA_URL=${MEDIA_URL:-http://localhost:4000/media/}
+      - SINGER_POSTGRES_TARGET_USERNAME=${SINGER_POSTGRES_TARGET_USERNAME}
+      - SINGER_POSTGRES_TARGET_PASSWORD=${SINGER_POSTGRES_TARGET_PASSWORD}
+      - SINGER_POSTGRES_TARGET_HOST=${SINGER_POSTGRES_TARGET_HOST}
+      - SINGER_POSTGRES_TARGET_HOST_WITHOUT_POOLER=${SINGER_POSTGRES_TARGET_HOST_WITHOUT_POOLER}
+      - STAGING_TARGET_DB_USERNAME=${STAGING_TARGET_DB_USERNAME}
+      - STAGING_TARGET_DB_PASSWORD=${STAGING_TARGET_DB_PASSWORD}
+      - STAGING_TARGET_DB_DATABASE=${STAGING_TARGET_DB_DATABASE}
+      - STAGING_TARGET_DB_HOST=${STAGING_TARGET_DB_HOST}
+      - PUBLIC_PELIQAN_URL=${PUBLIC_PELIQAN_URL}
+      - EMAIL_SMTP
+      - EMAIL_SMTP_HOST
+      - EMAIL_SMTP_PORT
+      - EMAIL_SMTP_USE_TLS
+      - EMAIL_SMTP_USER
+      - EMAIL_SMTP_PASSWORD
+      - FROM_EMAIL
+      - ENV=${ENV:-DEV}
+      - OAUTH_SECRET_KEY=${OAUTH_SECRET_KEY}
+      - AES_SECRET_KEY=${AES_SECRET_KEY}
+      - DD_SERVICE=celery-container-factory-worker
+      - PELIQAN_RESOURCE_LOGS_S3_AWS_ACCESS_KEY_ID=${PELIQAN_RESOURCE_LOGS_S3_AWS_ACCESS_KEY_ID}
+      - PELIQAN_RESOURCE_LOGS_S3_AWS_SECRET_ACCESS_KEY=${PELIQAN_RESOURCE_LOGS_S3_AWS_SECRET_ACCESS_KEY}
+      - PELIQAN_RESOURCE_LOGS_S3_AWS_REGION=${PELIQAN_RESOURCE_LOGS_S3_AWS_REGION}
+      - PELIQAN_RESOURCE_LOGS_S3_BUCKET_NAME=${PELIQAN_RESOURCE_LOGS_S3_BUCKET_NAME}
+    volumes:
+      - trinocatalog:/etc/catalog
+      - connectors:/etc/connectors
+    networks:
+      local:
+
+  celery-singer-worker:
+    image: peliqan/backend:latest
+    command: celery-singer worker -l INFO -Q singer
+    depends_on:
+      - backend
+    environment:
+      - PELIQAN_WAREHOUSE_HOST=${PELIQAN_WAREHOUSE_HOST:-localhost}
+      - PUBLIC_BACKEND_URL=${PUBLIC_BACKEND_URL:-http://localhost:8000}
+      - PUBLIC_WEB_FRONTEND_URL=${PUBLIC_WEB_FRONTEND_URL:-http://localhost:3000}
+      - MIGRATE_ON_STARTUP=${MIGRATE_ON_STARTUP:-true}
+      - LOAD_SERVER_DEFINITIONS=${LOAD_SERVER_DEFINITIONS:-true}
+      - SYNC_TEMPLATES_ON_STARTUP=${SYNC_TEMPLATES_ON_STARTUP:-true}
+      - DATABASE_USER=${DATABASE_USER:-baserow}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD:-baserow}
+      - DATABASE_NAME=${DATABASE_NAME:-baserow}
+      - ADDITIONAL_APPS
+      - MEDIA_URL=${MEDIA_URL:-http://localhost:4000/media/}
+      - EMAIL_SMTP
+      - EMAIL_SMTP_HOST
+      - EMAIL_SMTP_PORT
+      - EMAIL_SMTP_USE_TLS
+      - EMAIL_SMTP_USER
+      - EMAIL_SMTP_PASSWORD
+      - FROM_EMAIL
+      - SINGER_TARGET_SERVER_TYPE=${SINGER_TARGET_SERVER_TYPE}
+      - SINGER_SNOWFLAKE_ADMIN_USERNAME=${SINGER_SNOWFLAKE_ADMIN_USERNAME}
+      - SINGER_SNOWFLAKE_ADMIN_PASSWORD=${SINGER_SNOWFLAKE_ADMIN_PASSWORD}
+      - SINGER_SNOWFLAKE_ADMIN_WAREHOUSE=${SINGER_SNOWFLAKE_ADMIN_WAREHOUSE}
+      - SINGER_SNOWFLAKE_ADMIN_HOST=${SINGER_SNOWFLAKE_ADMIN_HOST}
+      - SINGER_POSTGRES_TARGET_USERNAME=${SINGER_POSTGRES_TARGET_USERNAME}
+      - SINGER_POSTGRES_TARGET_PASSWORD=${SINGER_POSTGRES_TARGET_PASSWORD}
+      - SINGER_POSTGRES_TARGET_HOST=${SINGER_POSTGRES_TARGET_HOST}
+      - HUBSPOT_URL=${HUBSPOT_URL}
+      - HUBSPOT_REQUEST_TIMEOUT=${HUBSPOT_REQUEST_TIMEOUT}
+      - JIRA_USER_AGENT=${JIRA_USER_AGENT}
+      - JIRA_REQUEST_TIMEOUT=${JIRA_REQUEST_TIMEOUT}
+      - JIRA_GROUPS=${JIRA_GROUPS}
+      - SALESFORCE_API_TYPE=${SALESFORCE_API_TYPE}
+      - SALESFORCE_LOOKBACK_WINDOW=${SALESFORCE_LOOKBACK_WINDOW}
+      - ENV=${ENV:-DEV}
+      - OAUTH_SECRET_KEY=${OAUTH_SECRET_KEY}
+      - AES_SECRET_KEY=${AES_SECRET_KEY}
+      - DD_SERVICE=celery-singer-worker
+      - PELIQAN_RESOURCE_LOGS_S3_AWS_ACCESS_KEY_ID=${PELIQAN_RESOURCE_LOGS_S3_AWS_ACCESS_KEY_ID}
+      - PELIQAN_RESOURCE_LOGS_S3_AWS_SECRET_ACCESS_KEY=${PELIQAN_RESOURCE_LOGS_S3_AWS_SECRET_ACCESS_KEY}
+      - PELIQAN_RESOURCE_LOGS_S3_AWS_REGION=${PELIQAN_RESOURCE_LOGS_S3_AWS_REGION}
+      - PELIQAN_RESOURCE_LOGS_S3_BUCKET_NAME=${PELIQAN_RESOURCE_LOGS_S3_BUCKET_NAME}
+      - MY_POD_NAMESPACE=${MY_POD_NAMESPACE}
+    volumes:
+      - singerconfig:/etc/singer_config
+      - singerDependencies:/etc/.virtualenvs/
+      - connectors:/etc/connectors
+    networks:
+      local:
+
+  celery-beat-worker:
+    image: peliqan/backend:latest
+    command: celery-beat beat -l INFO -S redbeat.RedBeatScheduler
+    depends_on:
+      - backend
+    environment:
+      - PELIQAN_WAREHOUSE_HOST=${PELIQAN_WAREHOUSE_HOST:-localhost}
+      - PUBLIC_BACKEND_URL=${PUBLIC_BACKEND_URL:-http://localhost:8000}
+      - PUBLIC_WEB_FRONTEND_URL=${PUBLIC_WEB_FRONTEND_URL:-http://localhost:3000}
+      - MIGRATE_ON_STARTUP=${MIGRATE_ON_STARTUP:-true}
+      - LOAD_SERVER_DEFINITIONS=${LOAD_SERVER_DEFINITIONS:-true}
+      - SYNC_TEMPLATES_ON_STARTUP=${SYNC_TEMPLATES_ON_STARTUP:-true}
+      - DATABASE_USER=${DATABASE_USER:-baserow}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD:-baserow}
+      - DATABASE_NAME=${DATABASE_NAME:-baserow}
+      - ADDITIONAL_APPS
+      - MEDIA_URL=${MEDIA_URL:-http://localhost:4000/media/}
+      - EMAIL_SMTP
+      - EMAIL_SMTP_HOST
+      - EMAIL_SMTP_PORT
+      - EMAIL_SMTP_USE_TLS
+      - EMAIL_SMTP_USER
+      - EMAIL_SMTP_PASSWORD
+      - FROM_EMAIL
+      - ENV=${ENV:-DEV}
+      - OAUTH_SECRET_KEY=${OAUTH_SECRET_KEY}
+      - AES_SECRET_KEY=${AES_SECRET_KEY}
+      - DD_SERVICE=celery-beat-worker
+      - PELIQAN_RESOURCE_LOGS_S3_AWS_ACCESS_KEY_ID=${PELIQAN_RESOURCE_LOGS_S3_AWS_ACCESS_KEY_ID}
+      - PELIQAN_RESOURCE_LOGS_S3_AWS_SECRET_ACCESS_KEY=${PELIQAN_RESOURCE_LOGS_S3_AWS_SECRET_ACCESS_KEY}
+      - PELIQAN_RESOURCE_LOGS_S3_AWS_REGION=${PELIQAN_RESOURCE_LOGS_S3_AWS_REGION}
+      - PELIQAN_RESOURCE_LOGS_S3_BUCKET_NAME=${PELIQAN_RESOURCE_LOGS_S3_BUCKET_NAME}
+    volumes:
+      - media:/baserow/media
+      - connectors:/etc/connectors
+    networks:
+      local:
+
+  web-frontend:
+    image: peliqan/web-frontend:latest
+    environment:
+      - PUBLIC_BACKEND_URL=${PUBLIC_BACKEND_URL:-http://localhost:8000}
+      - PUBLIC_WEB_FRONTEND_URL=${PUBLIC_WEB_FRONTEND_URL:-http://localhost:3000}
+      - ADDITIONAL_MODULES
+      - ENV=${ENV:-DEV}
+      - DD_SERVICE=web-frontend
+      - PUBLIC_API_ENDPOINTS_BASE_URL=${PUBLIC_API_ENDPOINTS_BASE_URL:-http://localhost:5000}
+    ports:
+      - "${HOST_PUBLISH_IP:-127.0.0.1}:${WEB_FRONTEND_PORT:-3000}:3000"
+    depends_on:
+      - backend
+    volumes:
+      - connector_icons:/baserow/web-frontend/modules/core/static/img/db/shared
+    networks:
+      local:
+
+  # Dedicated container to launch streamlit data apps
+  data-app:
+    image: peliqan/data-app:latest
+    ports:
+      - "8090:80"
+      - "5000:5000"
+      - "5001:5001"
+    networks:
+      local:
+    environment:
+      - DD_SERVICE=data-app
+    volumes:
+      - streamlit_apps:/etc/streamlit_apps
+      - connectors:/etc/connectors
+    depends_on:
+      - backend
+
+  backoffice:
+    image: peliqan/backoffice:latest
+    environment:
+      # prefix with NUXT_PUBLIC
+      - NUXT_PUBLIC_BACKEND_URL=${PUBLIC_BACKEND_URL:-http://localhost:8000}
+      - NUXT_PUBLIC_BACKOFFICE_URL=${PUBLIC_BACKOFFICE_URL:-http://localhost:3001}
+      - NUXT_BACKEND_URL=${PRIVATE_BACKEND_URL:-http://backend:8000}
+      - NUXT_PUBLIC_WEB_FRONTEND_URL=${PUBLIC_WEB_FRONTEND_URL:-http://localhost:3000}
+      - NUXT_PUBLIC_DEV_PORT=${NUXT_DEV_PORT:-24678}
+      - ADDITIONAL_MODULES
+      - ENV=${ENV:-DEV}
+      - DD_SERVICE=backoffice
+    ports:
+      - "${HOST_PUBLISH_IP:-127.0.0.1}:${BACKOFFICE_PORT:-3001}:3001"
+      - "${HOST_PUBLISH_IP:-127.0.0.1}:${NUXT_DEV_PORT:-24678}:24678"
+    depends_on:
+      - backend
+    networks:
+      local:
+
+  trinocatalog-volume-fixer:
+    image: bash:4.4
+    command: chown 9999:9999 -R /etc/calcite_config
+    volumes:
+      - trinocatalog:/etc/calcite_config
+    networks:
+      local:
+
+  singerconfig-volume-fixer:
+    image: bash:4.4
+    command: chown 9999:9999 -R /etc/singer_config
+    volumes:
+      - singerconfig:/etc/singer_config
+    networks:
+      local:
+
+  singerDependencies-volume-fixer:
+    image: bash:4.4
+    command: chown 9999:9999 -R /etc/.virtualenvs
+    volumes:
+      - singerDependencies:/etc/.virtualenvs
+    networks:
+      local:
+
+  data-app-volume-fixer:
+    image: bash:4.4
+    command: chown 9999:9999 -R /etc/streamlit_apps
+    volumes:
+      - streamlit_apps:/etc/streamlit_apps
+
+  connectors-volume-fixer:
+    image: bash:4.4
+    command: chown 9999:9999 -R /etc/connectors
+    volumes:
+      - connectors:/etc/connectors
+    networks:
+      local:
+
+  connector-icons-volume-fixer:
+    image: bash:4.4
+    command: chown 9999:9999 -R /etc/connector_icons
+    volumes:
+      - connector_icons:/etc/connector_icons
+    networks:
+      local:
+
+  trino-calcite:
+    build:
+      context: ./trino-calcite
+      args:
+        TARGETARCH: "${TARGETARCH:-arm}"
+    ports:
+      - "8082:8082"
+    networks:
+      local:
+    volumes:
+      - trinocatalog:/etc/catalog
+    depends_on:
+      - trinocatalog-volume-fixer
+
+  singer-target-db:
+    image: postgres:15.2
+    environment:
+      POSTGRES_USER: ${SINGER_POSTGRES_TARGET_USERNAME:-singer}
+      POSTGRES_PASSWORD: ${SINGER_POSTGRES_TARGET_PASSWORD:-singer}
+    ports:
+      - 5433:5432
+    restart: always
+    networks:
+      local:
+    volumes:
+      - singer_target_data:/var/lib/postgresql/data
+volumes:
+  pgdata:
+  media:
+  trinocatalog:
+  connector_icons:
+  streamlit_apps:
+  singerconfig:
+  singerDependencies:
+  singer_target_data:
+  airbyte:
+  connectors:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${PWD}/connectors
+networks:
+  local:
+    driver: bridge

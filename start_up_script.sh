@@ -40,6 +40,27 @@ check_nginx_installation() {
   fi
 }
 
+# Check if docker has access to Peliqan's private repository
+check_private_repository_access() {
+  echo "#### Checking access to Peliqan's private Docker Hub repo"
+  # Try pulling a private image
+  msg=$(docker pull peliqan/backend:latest 2>&1)
+  case "$msg" in
+  *"requested access to the resource is denied"*|*"pull access denied"*)
+    echo "** Access denied. Please login to Docker Hub using the provided access keys!"
+    exit 1
+    ;;
+  *"manifest unknown"*|*"not found"*)
+    echo "** Access denied. Please login to Docker Hub using the provided access keys!"
+    exit 1
+    ;;
+  *"Pulling from"*)
+    echo "** Access to private repo is verified.";;
+  *)
+    echo "** Unknown message: $msg";;
+  esac
+}
+
 entry_point() {
   # Check all the pre-requests are installed
   check_docker_installation
@@ -47,6 +68,8 @@ entry_point() {
   check_docker_compose_installation
   print_new_line
   check_nginx_installation
+  print_new_line
+  check_private_repository_access
 }
 
 # Start up function

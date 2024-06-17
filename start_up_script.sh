@@ -70,6 +70,11 @@ entry_point() {
   check_nginx_installation
   print_new_line
   check_private_repository_access
+
+  # Start the services
+  echo "#### Starting the services"
+  docker-compose up -d
+  print_new_line
 }
 
 # Start up function

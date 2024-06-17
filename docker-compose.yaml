@@ -7,9 +7,9 @@ services:
   db:
     image: postgres:15.2
     environment:
-      - POSTGRES_USER=${DATABASE_USER:-baserow}
-      - POSTGRES_PASSWORD=${DATABASE_PASSWORD:-baserow}
-      - POSTGRES_DB=${DATABASE_NAME:-baserow}
+      - POSTGRES_USER=${DATABASE_USER:-peliqan}
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD:-peliqan}
+      - POSTGRES_DB=${DATABASE_NAME:-peliqan}
     networks:
       local:
     volumes:
@@ -36,9 +36,9 @@ services:
       - MIGRATE_ON_STARTUP=${MIGRATE_ON_STARTUP:-true}
       - LOAD_SERVER_DEFINITIONS=${LOAD_SERVER_DEFINITIONS:-false}
       - SYNC_TEMPLATES_ON_STARTUP=${SYNC_TEMPLATES_ON_STARTUP:-true}
-      - DATABASE_USER=${DATABASE_USER:-baserow}
-      - DATABASE_PASSWORD=${DATABASE_PASSWORD:-baserow}
-      - DATABASE_NAME=${DATABASE_NAME:-baserow}
+      - DATABASE_USER=${DATABASE_USER:-peliqan}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD:-peliqan}
+      - DATABASE_NAME=${DATABASE_NAME:-peliqan}
       - ADDITIONAL_APPS
       - MEDIA_URL=${MEDIA_URL:-http://localhost:4000/media/}
       - EMAIL_SMTP
@@ -70,7 +70,6 @@ services:
       - mjml
       - trinocatalog-volume-fixer
     volumes:
-      - media:/baserow/media
       - trinocatalog:/etc/catalog
       - singerconfig:/etc/singer_config
       - streamlit_apps:/etc/streamlit_apps
@@ -91,9 +90,9 @@ services:
       - MIGRATE_ON_STARTUP=${MIGRATE_ON_STARTUP:-true}
       - LOAD_SERVER_DEFINITIONS=${LOAD_SERVER_DEFINITIONS:-true}
       - SYNC_TEMPLATES_ON_STARTUP=${SYNC_TEMPLATES_ON_STARTUP:-true}
-      - DATABASE_USER=${DATABASE_USER:-baserow}
-      - DATABASE_PASSWORD=${DATABASE_PASSWORD:-baserow}
-      - DATABASE_NAME=${DATABASE_NAME:-baserow}
+      - DATABASE_USER=${DATABASE_USER:-peliqan}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD:-peliqan}
+      - DATABASE_NAME=${DATABASE_NAME:-peliqan}
       - ADDITIONAL_APPS
       - MEDIA_URL=${MEDIA_URL:-http://localhost:4000/media/}
       - EMAIL_SMTP
@@ -117,7 +116,6 @@ services:
     depends_on:
       - backend
     volumes:
-      - media:/baserow/media
       - streamlit_apps:/etc/streamlit_apps
     networks:
       local:
@@ -137,9 +135,9 @@ services:
       - MIGRATE_ON_STARTUP=${MIGRATE_ON_STARTUP:-true}
       - LOAD_SERVER_DEFINITIONS=${LOAD_SERVER_DEFINITIONS:-true}
       - SYNC_TEMPLATES_ON_STARTUP=${SYNC_TEMPLATES_ON_STARTUP:-true}
-      - DATABASE_USER=${DATABASE_USER:-baserow}
-      - DATABASE_PASSWORD=${DATABASE_PASSWORD:-baserow}
-      - DATABASE_NAME=${DATABASE_NAME:-baserow}
+      - DATABASE_USER=${DATABASE_USER:-peliqan}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD:-peliqan}
+      - DATABASE_NAME=${DATABASE_NAME:-peliqan}
       - ADDITIONAL_APPS
       - MEDIA_URL=${MEDIA_URL:-http://localhost:4000/media/}
       - EMAIL_SMTP
@@ -157,8 +155,6 @@ services:
       - PELIQAN_RESOURCE_LOGS_S3_AWS_SECRET_ACCESS_KEY=${PELIQAN_RESOURCE_LOGS_S3_AWS_SECRET_ACCESS_KEY}
       - PELIQAN_RESOURCE_LOGS_S3_AWS_REGION=${PELIQAN_RESOURCE_LOGS_S3_AWS_REGION}
       - PELIQAN_RESOURCE_LOGS_S3_BUCKET_NAME=${PELIQAN_RESOURCE_LOGS_S3_BUCKET_NAME}
-    volumes:
-      - media:/baserow/media
     networks:
       local:
     stdin_open: false
@@ -177,9 +173,9 @@ services:
       - MIGRATE_ON_STARTUP=${MIGRATE_ON_STARTUP:-true}
       - LOAD_SERVER_DEFINITIONS=${LOAD_SERVER_DEFINITIONS:-true}
       - SYNC_TEMPLATES_ON_STARTUP=${SYNC_TEMPLATES_ON_STARTUP:-true}
-      - DATABASE_USER=${DATABASE_USER:-baserow}
-      - DATABASE_PASSWORD=${DATABASE_PASSWORD:-baserow}
-      - DATABASE_NAME=${DATABASE_NAME:-baserow}
+      - DATABASE_USER=${DATABASE_USER:-peliqan}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD:-peliqan}
+      - DATABASE_NAME=${DATABASE_NAME:-peliqan}
       - SINGER_TARGET_SERVER_TYPE=${SINGER_TARGET_SERVER_TYPE}
       - ADDITIONAL_APPS
       - MEDIA_URL=${MEDIA_URL:-http://localhost:4000/media/}
@@ -217,9 +213,9 @@ services:
       - MIGRATE_ON_STARTUP=${MIGRATE_ON_STARTUP:-true}
       - LOAD_SERVER_DEFINITIONS=${LOAD_SERVER_DEFINITIONS:-true}
       - SYNC_TEMPLATES_ON_STARTUP=${SYNC_TEMPLATES_ON_STARTUP:-true}
-      - DATABASE_USER=${DATABASE_USER:-baserow}
-      - DATABASE_PASSWORD=${DATABASE_PASSWORD:-baserow}
-      - DATABASE_NAME=${DATABASE_NAME:-baserow}
+      - DATABASE_USER=${DATABASE_USER:-peliqan}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD:-peliqan}
+      - DATABASE_NAME=${DATABASE_NAME:-peliqan}
       - ADDITIONAL_APPS
       - MEDIA_URL=${MEDIA_URL:-http://localhost:4000/media/}
       - EMAIL_SMTP
@@ -272,9 +268,9 @@ services:
       - MIGRATE_ON_STARTUP=${MIGRATE_ON_STARTUP:-true}
       - LOAD_SERVER_DEFINITIONS=${LOAD_SERVER_DEFINITIONS:-true}
       - SYNC_TEMPLATES_ON_STARTUP=${SYNC_TEMPLATES_ON_STARTUP:-true}
-      - DATABASE_USER=${DATABASE_USER:-baserow}
-      - DATABASE_PASSWORD=${DATABASE_PASSWORD:-baserow}
-      - DATABASE_NAME=${DATABASE_NAME:-baserow}
+      - DATABASE_USER=${DATABASE_USER:-peliqan}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD:-peliqan}
+      - DATABASE_NAME=${DATABASE_NAME:-peliqan}
       - ADDITIONAL_APPS
       - MEDIA_URL=${MEDIA_URL:-http://localhost:4000/media/}
       - EMAIL_SMTP
@@ -292,8 +288,6 @@ services:
       - PELIQAN_RESOURCE_LOGS_S3_AWS_SECRET_ACCESS_KEY=${PELIQAN_RESOURCE_LOGS_S3_AWS_SECRET_ACCESS_KEY}
       - PELIQAN_RESOURCE_LOGS_S3_AWS_REGION=${PELIQAN_RESOURCE_LOGS_S3_AWS_REGION}
       - PELIQAN_RESOURCE_LOGS_S3_BUCKET_NAME=${PELIQAN_RESOURCE_LOGS_S3_BUCKET_NAME}
-    volumes:
-      - media:/baserow/media
     networks:
       local:
     stdin_open: false
@@ -419,7 +413,6 @@ services:
       - singer_target_data:/var/lib/postgresql/data
 volumes:
   pgdata:
-  media:
   trinocatalog:
   connector_icons:
   streamlit_apps:

@@ -1,6 +1,6 @@
-# Deploy peliqan locally ( on-prem )
+# Deploy Peliqan on-prem
 
-Hello this is my description
+Contact Peliqan to receive credentials, in order to deploy Peliqan in your private cloud or on-prem.
 
 ## Table of contents
 - [pre-requests](#pre-requests)

@@ -1,8 +1,19 @@
 version: "3"
 
 services:
-#  nginx:
-#    image : peliqan/nginx:latest
+  local-ingress:
+    image : peliqan/local-ingress:latest
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - backend
+      - web-frontend
+      - backoffice
+      - data-app
+    networks:
+        local:
+    restart: always
 
   db:
     image: postgres:15.2
@@ -14,17 +25,20 @@ services:
       local:
     volumes:
       - pgdata:/var/lib/postgresql/data
+    restart: always
 
   redis:
     image: redis/redis-stack-server:latest
     networks:
       local:
+    restart: always
 
   mjml:
     image: liminspace/mjml-tcpserver:0.10
     user: "1000:1000"
     networks:
       local:
+    restart: always
 
   backend:
     image: peliqan/backend:latest
@@ -35,7 +49,7 @@ services:
       - PUBLIC_WEB_FRONTEND_URL=${PUBLIC_WEB_FRONTEND_URL:-http://localhost:3000}
       - MIGRATE_ON_STARTUP=${MIGRATE_ON_STARTUP:-true}
       - LOAD_SERVER_DEFINITIONS=${LOAD_SERVER_DEFINITIONS:-false}
-      - SYNC_TEMPLATES_ON_STARTUP=${SYNC_TEMPLATES_ON_STARTUP:-true}
+      - SYNC_TEMPLATES_ON_STARTUP=${SYNC_TEMPLATES_ON_STARTUP:-false}
       - DATABASE_USER=${DATABASE_USER:-peliqan}
       - DATABASE_PASSWORD=${DATABASE_PASSWORD:-peliqan}
       - DATABASE_NAME=${DATABASE_NAME:-peliqan}
@@ -49,8 +63,6 @@ services:
       - EMAIL_SMTP_PASSWORD
       - FROM_EMAIL
       - EMAIL_VERIFY_SECRET_KEY=${EMAIL_VERIFY_SECRET_KEY}
-      - SLACK_SIGN_UP_NOTIFICATION_API=${SLACK_SIGN_UP_NOTIFICATION_API}
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
       - SINGER_TARGET_SERVER_TYPE=${SINGER_TARGET_SERVER_TYPE}
       - ENV=${ENV:-ON_PREM}
       - OAUTH_SECRET_KEY=${OAUTH_SECRET_KEY}
@@ -58,11 +70,7 @@ services:
       - DD_SERVICE=backend
       - MIXPANEL_API_TOKEN=${MIXPANEL_API_TOKEN}
       - EXTRA_ALLOWED_HOSTS=${EXTRA_ALLOWED_HOSTS}
-      - PELIQAN_RESOURCE_LOGS_S3_AWS_ACCESS_KEY_ID=${PELIQAN_RESOURCE_LOGS_S3_AWS_ACCESS_KEY_ID}
-      - PELIQAN_RESOURCE_LOGS_S3_AWS_SECRET_ACCESS_KEY=${PELIQAN_RESOURCE_LOGS_S3_AWS_SECRET_ACCESS_KEY}
-      - PELIQAN_RESOURCE_LOGS_S3_AWS_REGION=${PELIQAN_RESOURCE_LOGS_S3_AWS_REGION}
-      - PELIQAN_RESOURCE_LOGS_S3_BUCKET_NAME=${PELIQAN_RESOURCE_LOGS_S3_BUCKET_NAME}
-    ports:
+    expose:
       - "8000"
     depends_on:
       - db
@@ -77,6 +85,7 @@ services:
       - singerDependencies:/etc/.virtualenvs/
     networks:
       local:
+    restart: always
     stdin_open: false
     tty: false
 
@@ -89,7 +98,7 @@ services:
       - PUBLIC_WEB_FRONTEND_URL=${PUBLIC_WEB_FRONTEND_URL:-http://localhost:3000}
       - MIGRATE_ON_STARTUP=${MIGRATE_ON_STARTUP:-true}
       - LOAD_SERVER_DEFINITIONS=${LOAD_SERVER_DEFINITIONS:-true}
-      - SYNC_TEMPLATES_ON_STARTUP=${SYNC_TEMPLATES_ON_STARTUP:-true}
+      - SYNC_TEMPLATES_ON_STARTUP=${SYNC_TEMPLATES_ON_STARTUP:-false}
       - DATABASE_USER=${DATABASE_USER:-peliqan}
       - DATABASE_PASSWORD=${DATABASE_PASSWORD:-peliqan}
       - DATABASE_NAME=${DATABASE_NAME:-peliqan}
@@ -102,16 +111,11 @@ services:
       - EMAIL_SMTP_USER
       - EMAIL_SMTP_PASSWORD
       - FROM_EMAIL
-      - SLACK_SIGN_UP_NOTIFICATION_API=${SLACK_SIGN_UP_NOTIFICATION_API}
       - ENV=${ENV:-ON_PREM}
       - OAUTH_SECRET_KEY=${OAUTH_SECRET_KEY}
       - AES_SECRET_KEY=${AES_SECRET_KEY}
       - DD_SERVICE=celery
       - MIXPANEL_API_TOKEN=${MIXPANEL_API_TOKEN}
-      - PELIQAN_RESOURCE_LOGS_S3_AWS_ACCESS_KEY_ID=${PELIQAN_RESOURCE_LOGS_S3_AWS_ACCESS_KEY_ID}
-      - PELIQAN_RESOURCE_LOGS_S3_AWS_SECRET_ACCESS_KEY=${PELIQAN_RESOURCE_LOGS_S3_AWS_SECRET_ACCESS_KEY}
-      - PELIQAN_RESOURCE_LOGS_S3_AWS_REGION=${PELIQAN_RESOURCE_LOGS_S3_AWS_REGION}
-      - PELIQAN_RESOURCE_LOGS_S3_BUCKET_NAME=${PELIQAN_RESOURCE_LOGS_S3_BUCKET_NAME}
     command: celery worker -l INFO -Q celery
     depends_on:
       - backend
@@ -119,6 +123,7 @@ services:
       - streamlit_apps:/etc/streamlit_apps
     networks:
       local:
+    restart: always
     stdin_open: false
     tty: false
 
@@ -134,7 +139,7 @@ services:
       - PUBLIC_WEB_FRONTEND_URL=${PUBLIC_WEB_FRONTEND_URL:-http://localhost:3000}
       - MIGRATE_ON_STARTUP=${MIGRATE_ON_STARTUP:-true}
       - LOAD_SERVER_DEFINITIONS=${LOAD_SERVER_DEFINITIONS:-true}
-      - SYNC_TEMPLATES_ON_STARTUP=${SYNC_TEMPLATES_ON_STARTUP:-true}
+      - SYNC_TEMPLATES_ON_STARTUP=${SYNC_TEMPLATES_ON_STARTUP:-false}
       - DATABASE_USER=${DATABASE_USER:-peliqan}
       - DATABASE_PASSWORD=${DATABASE_PASSWORD:-peliqan}
       - DATABASE_NAME=${DATABASE_NAME:-peliqan}
@@ -151,12 +156,9 @@ services:
       - OAUTH_SECRET_KEY=${OAUTH_SECRET_KEY}
       - AES_SECRET_KEY=${AES_SECRET_KEY}
       - DD_SERVICE=celery-export-worker
-      - PELIQAN_RESOURCE_LOGS_S3_AWS_ACCESS_KEY_ID=${PELIQAN_RESOURCE_LOGS_S3_AWS_ACCESS_KEY_ID}
-      - PELIQAN_RESOURCE_LOGS_S3_AWS_SECRET_ACCESS_KEY=${PELIQAN_RESOURCE_LOGS_S3_AWS_SECRET_ACCESS_KEY}
-      - PELIQAN_RESOURCE_LOGS_S3_AWS_REGION=${PELIQAN_RESOURCE_LOGS_S3_AWS_REGION}
-      - PELIQAN_RESOURCE_LOGS_S3_BUCKET_NAME=${PELIQAN_RESOURCE_LOGS_S3_BUCKET_NAME}
     networks:
       local:
+    restart: always
     stdin_open: false
     tty: false
 
@@ -172,7 +174,7 @@ services:
       - PUBLIC_WEB_FRONTEND_URL=${PUBLIC_WEB_FRONTEND_URL:-http://localhost:3000}
       - MIGRATE_ON_STARTUP=${MIGRATE_ON_STARTUP:-true}
       - LOAD_SERVER_DEFINITIONS=${LOAD_SERVER_DEFINITIONS:-true}
-      - SYNC_TEMPLATES_ON_STARTUP=${SYNC_TEMPLATES_ON_STARTUP:-true}
+      - SYNC_TEMPLATES_ON_STARTUP=${SYNC_TEMPLATES_ON_STARTUP:-false}
       - DATABASE_USER=${DATABASE_USER:-peliqan}
       - DATABASE_PASSWORD=${DATABASE_PASSWORD:-peliqan}
       - DATABASE_NAME=${DATABASE_NAME:-peliqan}
@@ -190,14 +192,11 @@ services:
       - OAUTH_SECRET_KEY=${OAUTH_SECRET_KEY}
       - AES_SECRET_KEY=${AES_SECRET_KEY}
       - DD_SERVICE=celery-sync-worker
-      - PELIQAN_RESOURCE_LOGS_S3_AWS_ACCESS_KEY_ID=${PELIQAN_RESOURCE_LOGS_S3_AWS_ACCESS_KEY_ID}
-      - PELIQAN_RESOURCE_LOGS_S3_AWS_SECRET_ACCESS_KEY=${PELIQAN_RESOURCE_LOGS_S3_AWS_SECRET_ACCESS_KEY}
-      - PELIQAN_RESOURCE_LOGS_S3_AWS_REGION=${PELIQAN_RESOURCE_LOGS_S3_AWS_REGION}
-      - PELIQAN_RESOURCE_LOGS_S3_BUCKET_NAME=${PELIQAN_RESOURCE_LOGS_S3_BUCKET_NAME}
     volumes:
       - trinocatalog:/etc/catalog
     networks:
       local:
+    restart: always
     stdin_open: false
     tty: false
 
@@ -212,7 +211,7 @@ services:
       - PUBLIC_WEB_FRONTEND_URL=${PUBLIC_WEB_FRONTEND_URL:-http://localhost:3000}
       - MIGRATE_ON_STARTUP=${MIGRATE_ON_STARTUP:-true}
       - LOAD_SERVER_DEFINITIONS=${LOAD_SERVER_DEFINITIONS:-true}
-      - SYNC_TEMPLATES_ON_STARTUP=${SYNC_TEMPLATES_ON_STARTUP:-true}
+      - SYNC_TEMPLATES_ON_STARTUP=${SYNC_TEMPLATES_ON_STARTUP:-false}
       - DATABASE_USER=${DATABASE_USER:-peliqan}
       - DATABASE_PASSWORD=${DATABASE_PASSWORD:-peliqan}
       - DATABASE_NAME=${DATABASE_NAME:-peliqan}
@@ -226,10 +225,6 @@ services:
       - EMAIL_SMTP_PASSWORD
       - FROM_EMAIL
       - SINGER_TARGET_SERVER_TYPE=${SINGER_TARGET_SERVER_TYPE}
-      - SINGER_SNOWFLAKE_ADMIN_USERNAME=${SINGER_SNOWFLAKE_ADMIN_USERNAME}
-      - SINGER_SNOWFLAKE_ADMIN_PASSWORD=${SINGER_SNOWFLAKE_ADMIN_PASSWORD}
-      - SINGER_SNOWFLAKE_ADMIN_WAREHOUSE=${SINGER_SNOWFLAKE_ADMIN_WAREHOUSE}
-      - SINGER_SNOWFLAKE_ADMIN_HOST=${SINGER_SNOWFLAKE_ADMIN_HOST}
       - SINGER_POSTGRES_TARGET_USERNAME=${SINGER_POSTGRES_TARGET_USERNAME}
       - SINGER_POSTGRES_TARGET_PASSWORD=${SINGER_POSTGRES_TARGET_PASSWORD}
       - SINGER_POSTGRES_TARGET_HOST=${SINGER_POSTGRES_TARGET_HOST}
@@ -244,15 +239,12 @@ services:
       - OAUTH_SECRET_KEY=${OAUTH_SECRET_KEY}
       - AES_SECRET_KEY=${AES_SECRET_KEY}
       - DD_SERVICE=celery-singer-worker
-      - PELIQAN_RESOURCE_LOGS_S3_AWS_ACCESS_KEY_ID=${PELIQAN_RESOURCE_LOGS_S3_AWS_ACCESS_KEY_ID}
-      - PELIQAN_RESOURCE_LOGS_S3_AWS_SECRET_ACCESS_KEY=${PELIQAN_RESOURCE_LOGS_S3_AWS_SECRET_ACCESS_KEY}
-      - PELIQAN_RESOURCE_LOGS_S3_AWS_REGION=${PELIQAN_RESOURCE_LOGS_S3_AWS_REGION}
-      - PELIQAN_RESOURCE_LOGS_S3_BUCKET_NAME=${PELIQAN_RESOURCE_LOGS_S3_BUCKET_NAME}
     volumes:
       - singerconfig:/etc/singer_config
       - singerDependencies:/etc/.virtualenvs/
     networks:
       local:
+    restart: always
     stdin_open: false
     tty: false
 
@@ -267,7 +259,7 @@ services:
       - PUBLIC_WEB_FRONTEND_URL=${PUBLIC_WEB_FRONTEND_URL:-http://localhost:3000}
       - MIGRATE_ON_STARTUP=${MIGRATE_ON_STARTUP:-true}
       - LOAD_SERVER_DEFINITIONS=${LOAD_SERVER_DEFINITIONS:-true}
-      - SYNC_TEMPLATES_ON_STARTUP=${SYNC_TEMPLATES_ON_STARTUP:-true}
+      - SYNC_TEMPLATES_ON_STARTUP=${SYNC_TEMPLATES_ON_STARTUP:-false}
       - DATABASE_USER=${DATABASE_USER:-peliqan}
       - DATABASE_PASSWORD=${DATABASE_PASSWORD:-peliqan}
       - DATABASE_NAME=${DATABASE_NAME:-peliqan}
@@ -284,12 +276,9 @@ services:
       - OAUTH_SECRET_KEY=${OAUTH_SECRET_KEY}
       - AES_SECRET_KEY=${AES_SECRET_KEY}
       - DD_SERVICE=celery-beat-worker
-      - PELIQAN_RESOURCE_LOGS_S3_AWS_ACCESS_KEY_ID=${PELIQAN_RESOURCE_LOGS_S3_AWS_ACCESS_KEY_ID}
-      - PELIQAN_RESOURCE_LOGS_S3_AWS_SECRET_ACCESS_KEY=${PELIQAN_RESOURCE_LOGS_S3_AWS_SECRET_ACCESS_KEY}
-      - PELIQAN_RESOURCE_LOGS_S3_AWS_REGION=${PELIQAN_RESOURCE_LOGS_S3_AWS_REGION}
-      - PELIQAN_RESOURCE_LOGS_S3_BUCKET_NAME=${PELIQAN_RESOURCE_LOGS_S3_BUCKET_NAME}
     networks:
       local:
+    restart: always
     stdin_open: false
     tty: false
 
@@ -302,7 +291,7 @@ services:
       - ENV=${ENV:-ON_PREM}
       - DD_SERVICE=web-frontend
       - PUBLIC_API_ENDPOINTS_BASE_URL=${PUBLIC_API_ENDPOINTS_BASE_URL:-http://localhost:5000}
-    ports:
+    expose:
       - "3000"
     depends_on:
       - backend
@@ -310,12 +299,13 @@ services:
       - connector_icons:/baserow/web-frontend/modules/core/static/img/db/shared
     networks:
       local:
+    restart: always
     stdin_open: false
     tty: false
 
   data-app:
     image: peliqan/data-app:latest
-    ports:
+    expose:
       - "80"
       - "5000"
       - "5001"
@@ -327,8 +317,9 @@ services:
       - streamlit_apps:/etc/streamlit_apps
     depends_on:
       - backend
-    stdin_open: false
-    tty: false
+    restart: always
+    stdin_open: true
+    tty: true
 
   backoffice:
     image: peliqan/backoffice:latest
@@ -341,18 +332,19 @@ services:
       - ADDITIONAL_MODULES
       - ENV=${ENV:-ON_PREM}
       - DD_SERVICE=backoffice
-    ports:
+    expose:
       - "3001"
     depends_on:
       - backend
     networks:
       local:
+    restart: always
     stdin_open: false
     tty: false
 
   trinocatalog-volume-fixer:
     image: bash:4.4
-    command: chown 9999:9999 -R /etc/calcite_config
+    command: chown 1000:1000 -R /etc/calcite_config
     volumes:
       - trinocatalog:/etc/calcite_config
     networks:
@@ -360,7 +352,7 @@ services:
 
   singerconfig-volume-fixer:
     image: bash:4.4
-    command: chown 9999:9999 -R /etc/singer_config
+    command: chown 1000:1000 -R /etc/singer_config
     volumes:
       - singerconfig:/etc/singer_config
     networks:
@@ -368,7 +360,7 @@ services:
 
   singerDependencies-volume-fixer:
     image: bash:4.4
-    command: chown 9999:9999 -R /etc/.virtualenvs
+    command: chown 1000:1000 -R /etc/.virtualenvs
     volumes:
       - singerDependencies:/etc/.virtualenvs
     networks:
@@ -376,13 +368,13 @@ services:
 
   data-app-volume-fixer:
     image: bash:4.4
-    command: chown 9999:9999 -R /etc/streamlit_apps
+    command: chown 1000:1000 -R /etc/streamlit_apps
     volumes:
       - streamlit_apps:/etc/streamlit_apps
 
   connector-icons-volume-fixer:
     image: bash:4.4
-    command: chown 9999:9999 -R /etc/connector_icons
+    command: chown 1000:1000 -R /etc/connector_icons
     volumes:
       - connector_icons:/etc/connector_icons
     networks:

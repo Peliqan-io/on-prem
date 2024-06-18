@@ -17,12 +17,12 @@ check_docker_installation() {
 }
 
 check_docker_compose_installation() {
-  # Check if docker-compose is installed
-  echo "#### Checking docker-compose installation"
-  if command -v docker-compose &> /dev/null; then
+  # Check if docker compose is installed
+  echo "#### Checking docker compose installation"
+  if command -v docker compose &> /dev/null; then
       echo "** Docker compose installation found"
   else
-      echo "** Docker compose installation not found. Please install docker-compose."
+      echo "** Docker compose installation not found. Please install docker compose."
       exit 1
   fi
 }
@@ -71,7 +71,7 @@ entry_point() {
       then
         export $(cat .env | xargs)
       fi
-      docker-compose up -d
+      docker compose up -d
       print_new_line
     ;;
     "down")
@@ -79,7 +79,7 @@ entry_point() {
       echo "#### Stopping the services"
       print_new_line
 
-      docker-compose down
+      docker compose down
       print_new_line
     ;;
     "update")
@@ -88,9 +88,9 @@ entry_point() {
       echo "#### Updating the services"
       print_new_line
 
-      docker-compose down
-      docker-compose pull
-      docker-compose up -d
+      docker compose down
+      docker compose pull
+      docker compose up -d
       print_new_line
     ;;
     *)

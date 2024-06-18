@@ -11,6 +11,11 @@ services:
       - web-frontend
       - backoffice
       - data-app
+    volumes:
+      - ./certificate.crt:/etc/ssl/certs/certificate.crt
+      - ./certificate.key:/etc/ssl/private/certificate.key
+    environment:
+      - HOSTNAME=${PUBLIC_INGRESS_HOSTNAME:-localhost}
     networks:
         local:
     restart: always
@@ -179,6 +184,9 @@ services:
       - DATABASE_PASSWORD=${DATABASE_PASSWORD:-peliqan}
       - DATABASE_NAME=${DATABASE_NAME:-peliqan}
       - SINGER_TARGET_SERVER_TYPE=${SINGER_TARGET_SERVER_TYPE}
+      - SINGER_POSTGRES_TARGET_USERNAME=${SINGER_POSTGRES_TARGET_USERNAME}
+      - SINGER_POSTGRES_TARGET_PASSWORD=${SINGER_POSTGRES_TARGET_PASSWORD}
+      - SINGER_POSTGRES_TARGET_HOST=${SINGER_POSTGRES_TARGET_HOST}
       - ADDITIONAL_APPS
       - MEDIA_URL=${MEDIA_URL:-http://localhost:4000/media/}
       - EMAIL_SMTP

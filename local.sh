@@ -27,19 +27,6 @@ check_docker_compose_installation() {
   fi
 }
 
-# NOTE ( @akhil ) : nginx can be configured in docker-compose itself,
-# So yea, local installation is not necessary
-check_nginx_installation() {
-  # Check if nginx is installed
-  echo "#### Checking nginx installation"
-  if command -v nginx &> /dev/null; then
-    echo "** Nginx installation found"
-  else
-    echo "** Nginx installation not found. Please install nginx"
-    exit 1
-  fi
-}
-
 # Check if docker has access to Peliqan's private repository
 check_private_repository_access() {
   echo "#### Checking access to Peliqan's private Docker Hub repo"
@@ -67,8 +54,6 @@ entry_point() {
   print_new_line
   check_docker_compose_installation
   print_new_line
-  check_nginx_installation
-
 
   # Handle user command input
   case $1 in
@@ -76,9 +61,12 @@ entry_point() {
       # Check directory access before starting
       print_new_line
       check_private_repository_access
+      print_new_line
 
       # Start the services
       echo "#### Starting the services"
+      print_new_line
+
       if [ ! -f .env ]
       then
         export $(cat .env | xargs)
@@ -89,7 +77,20 @@ entry_point() {
     "down")
       # Stop the services
       echo "#### Stopping the services"
+      print_new_line
+
       docker-compose down
+      print_new_line
+    ;;
+    "update")
+
+      # Update the services
+      echo "#### Updating the services"
+      print_new_line
+
+      docker-compose down
+      docker-compose pull
+      docker-compose up -d
       print_new_line
     ;;
     *)

@@ -48,6 +48,8 @@ services:
   backend:
     image: peliqan/backend:latest
     environment:
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
       - PELIQAN_WAREHOUSE_HOST=${PELIQAN_WAREHOUSE_HOST:-localhost}
       - SINGER_POSTGRES_TARGET_HOST_WITHOUT_POOLER=${SINGER_POSTGRES_TARGET_HOST_WITHOUT_POOLER}
       - PUBLIC_BACKEND_URL=${PUBLIC_BACKEND_URL:-http://localhost:8000}

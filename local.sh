@@ -93,6 +93,15 @@ entry_point() {
       docker compose up -d
       print_new_line
     ;;
+    "destroy")
+      # Destroy the services
+      echo "#### Destroying the services"
+      print_new_line
+
+      docker compose down
+      docker volume prune -f
+      print_new_line
+    ;;
     *)
       echo -n "Invalid"
     ;;

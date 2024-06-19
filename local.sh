@@ -94,6 +94,14 @@ entry_point() {
       print_new_line
     ;;
     "destroy")
+      # Ask for confirmation
+      echo "#### Are you sure you want to destroy the services? (y/n)"
+      read -r response
+      if [ "$response" != "y" ]
+      then
+        echo "#### Exiting"
+        exit 1
+      fi
       # Destroy the services
       echo "#### Destroying the services"
       print_new_line

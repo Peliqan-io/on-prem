@@ -340,7 +340,7 @@ services:
       - NUXT_PUBLIC_WEB_FRONTEND_URL=${PUBLIC_WEB_FRONTEND_URL:-http://localhost:3000}
       - NUXT_PUBLIC_DEV_PORT=${NUXT_DEV_PORT:-24678}
       - ADDITIONAL_MODULES
-      - ENV=${ENV:-ON_PREM}
+      - NUXT_PUBLIC_ENV=${ENV:-ON_PREM}
       - DD_SERVICE=backoffice
     expose:
       - "3001"

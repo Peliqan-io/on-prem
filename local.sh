@@ -95,6 +95,8 @@ entry_point() {
     ;;
     "destroy")
       # Ask for confirmation
+      echo "#### WARNING: This will destroy the services and remove all the data."
+      echo "#### WARNING: This action removes all the dangling docker volumes."
       echo "#### Are you sure you want to destroy the services? (y/n)"
       read -r response
       if [ "$response" != "y" ]
@@ -107,7 +109,7 @@ entry_point() {
       print_new_line
 
       docker compose down
-      docker volume prune -f
+      docker volume rm $(docker volume ls -q --filter dangling=true)
       print_new_line
     ;;
     *)

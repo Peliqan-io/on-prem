@@ -3,8 +3,9 @@
 Contact Peliqan to receive credentials, in order to deploy Peliqan in your private cloud or on-prem.
 
 ## Table of contents
-- [pre-requests](#pre-requests)
+- [Pre-requests](#pre-requests)
 - [Installation](#installation)
+- [Post Installation](#post-installation)
 
 # Pre-requests
 - Docker
@@ -21,7 +22,7 @@ Contact Peliqan to receive credentials, in order to deploy Peliqan in your priva
   docker login -u peliqan
   ```
 
-- Certificate files (optional)
+- Certificate files
   - If you have a certificate file, you can use it to secure the connection to the Peliqan server.
   - If you don't have a certificate file, you can generate self-singed certificate using the following command.
   ```bash

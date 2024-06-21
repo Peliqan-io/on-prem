@@ -16,14 +16,14 @@ Contact Peliqan to receive credentials, in order to deploy Peliqan in your priva
   - Installation docs : `https://docs.docker.com/compose/install/`
   
 
-- Docker login to Peliqan registry
-  - Run the following command to login to the Peliqan registry. And enter the passkey when prompted.
+- Docker login
+  - Run the following command to login to Docker to access the Peliqan images. Enter the passkey when prompted.
   ```bash
   docker login -u peliqan
   ```
 
 - Certificate files
-  - If you have a certificate file, you can use it to secure the connection to the Peliqan server.
+  - If you have a certificate file, you can use it to set up SSL.
   - If you don't have a certificate file, you can generate self-singed certificate using the following command.
   ```bash
   openssl req -x509 -newkey rsa:4096 -keyout certificate.key -out certificate.crt -days 365
@@ -40,9 +40,8 @@ Contact Peliqan to receive credentials, in order to deploy Peliqan in your priva
 - Update the following important environment variables in the `.env` file.
 
   - `SECRET_KEY` : Secret key for the Peliqan server, it should be a random string ( 64 bytes - optimal ).
-
-  - `DATABASE_USER` : Database user ( default : `peliqan` )
-  - `DATABASE_NAME` : Database name ( default : `peliqan` )
+  - `DATABASE_USER` : Database user ( default : `peliqan` ).
+  - `DATABASE_NAME` : Database name ( default : `peliqan` ).
   - `ADMIN_EMAIL` : Admin email ( default : `admin@peliqan.io` ), root superuser email.
   - `ADMIN_PASSWORD` : Admin password ( default : `admin` ), root superuser password.
   - `DATABASE_PASSWORD` : Database user password.
@@ -52,8 +51,8 @@ Contact Peliqan to receive credentials, in order to deploy Peliqan in your priva
   - `PUBLIC_API_ENDPOINTS_BASE_URL` : API endpoints base URL ( default : `https://localhost` ), replace `localhost` with your Domain / IP / Hostname.
   - `EMAIL_VERIFY_SECRET_KEY` : Email verify secret key, it should be a random string ( 64 bytes - optimal ).
   - `PELIQAN_WAREHOUSE_HOST` : Warehouse host ( default : `localhost` ), replace `localhost` with your Domain / IP / Hostname.
-  - `EXTRA_ALLOWED_HOSTS` : Extra allowed hosts.Add your Domain / IP / Hostname as comma seperated list. ( For example : `"example.com,example.org"` )
-  - `SINGER_POSTGRES_TARGET_PASSWORD` : Set the password for the singer postgres target.
+  - `EXTRA_ALLOWED_HOSTS` : Extra allowed hosts. Add your Domain / IP / Hostname as comma seperated list ( for example : `"example.com,example.org"` ).
+  - `SINGER_POSTGRES_TARGET_PASSWORD` : Set the password for the Singer pipelines Postgres target.
   - `OAUTH_SECRET_KEY` : OAuth secret key, it should be a random string ( 64 bytes - optimal ).
   - `PUBLIC_BACKOFFICE_URL` : Backoffice URL ( default : `https://localhost/backoffice` ), replace `localhost` with your Domain / IP / Hostname.
   - `AES_SECRET_KEY` : Expecting 128 bits key ( 16 bytes ) for AES encryption. Generate key using the following command.
@@ -88,8 +87,8 @@ Contact Peliqan to receive credentials, in order to deploy Peliqan in your priva
 
 ## Adding Postgres connector.
 - Open the browser and navigate to the `PUBLIC_BACKOFFICE_URL` to access the Peliqan server backoffice.
-- Login to backoffice with the admin credentials.
-- Goto `Connectors` -> `Create Connector` to create a new connector. And fill the following fields.
+- Login to the backoffice with the admin credentials.
+- Go to `Connectors` -> `Create Connector` to create a new connector. And fill the following fields.
   - `Connector Name` : `Postgres`
   - `Connector Type` : `postgres`
 - Click on the `Edit Json` button to edit the connector configuration.

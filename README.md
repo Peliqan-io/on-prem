@@ -3,11 +3,11 @@
 Contact Peliqan to receive credentials, in order to deploy Peliqan in your private cloud or on-prem.
 
 ## Table of contents
-- [Pre-requests](#pre-requests)
+- [Prerequisites](#prerequisites)
 - [Installation](#installation)
 - [Post Installation](#post-installation)
 
-# Pre-requests
+# Prerequisites
 - Docker
   - Installation docs : `https://docs.docker.com/engine/install/`
   

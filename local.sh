@@ -31,7 +31,7 @@ check_docker_compose_installation() {
 check_private_repository_access() {
   echo "#### Checking access to Peliqan's private Docker Hub repo"
   # Try pulling a private image
-  msg=$(docker pull peliqan/backend:latest 2>&1)
+  msg=$(docker pull peliqan/local-ingress:latest 2>&1)
   case "$msg" in
   *"requested access to the resource is denied"*|*"pull access denied"*)
     echo "** Access denied. Please login to Docker Hub using the provided access keys!"
@@ -48,21 +48,33 @@ check_private_repository_access() {
   esac
 }
 
-entry_point() {
-  # Check all the pre-requests are installed
-  check_docker_installation
-  print_new_line
-  check_docker_compose_installation
-  print_new_line
+# Check if the certificate and key files are present
+check_certificate_files() {
+  echo "#### Checking certificate files"
+  if [ -f ./certificate.crt ] && [ -f ./certificate.key ]; then
+    echo "** Certificate files found"
+  else
+    echo "** Certificate files not found. Please provide the certificate files."
+    exit 1
+  fi
+}
 
+
+entry_point() {
   # Handle user command input
   case $1 in
-    "start")
-      # Check directory access before starting
+    "pre-requests-check")
+      # Check all the pre-requests are installed
+      check_docker_installation
+      print_new_line
+      check_docker_compose_installation
       print_new_line
       check_private_repository_access
       print_new_line
-
+      check_certificate_files
+      print_new_line
+    ;;
+    "start")
       # Start the services
       echo "#### Starting the services"
       print_new_line

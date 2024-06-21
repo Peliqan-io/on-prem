@@ -60,6 +60,48 @@ check_certificate_files() {
 }
 
 
+check_backend() {
+  # Check if the backend is running
+  echo "## Checking if the backend is running"
+  if curl -k https://localhost/api/settings/ | grep "allow_new_signups" > /dev/null; then
+    echo "** Backend is running successfully"
+    print_new_line
+  else
+    echo "** Backend is not running yet..Retrying in 5 seconds"
+    print_new_line
+    sleep 5
+    check_backend
+  fi
+}
+
+check_frontend() {
+  # Check if the frontend is running
+  echo "## Checking if the frontend is running"
+  if curl -k https://localhost/login | grep "Peliqan" > /dev/null; then
+    echo "** Frontend is running successfully"
+    print_new_line
+  else
+    echo "** Frontend is not running yet..Retrying in 5 seconds"
+    print_new_line
+    sleep 5
+    check_frontend
+  fi
+}
+
+# Check if the services are running
+check_if_services_are_running() {
+  echo "#### Checking if the services are running"
+
+  # Check if backend is up
+  check_backend
+  # Check if frontend is up
+  check_frontend
+
+  print_new_line
+  echo "All services are ready. You can access the service at https://${PUBLIC_INGRESS_HOSTNAME}"
+}
+
+
 entry_point() {
   # Handle user command input
   case $1 in
@@ -85,6 +127,8 @@ entry_point() {
       fi
       docker compose up -d
       print_new_line
+      check_if_services_are_running
+      print_new_line
     ;;
     "down")
       # Stop the services
@@ -103,6 +147,8 @@ entry_point() {
       docker compose down
       docker compose pull
       docker compose up -d
+      print_new_line
+      check_if_services_are_running
       print_new_line
     ;;
     "destroy")

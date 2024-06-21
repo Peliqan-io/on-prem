@@ -62,7 +62,7 @@ check_certificate_files() {
 
 check_backend() {
   # Check if the backend is running
-  echo "## Checking if the backend is running"
+  echo "## Checking if backend is running"
   if curl -k https://localhost/api/settings/ | grep "allow_new_signups" > /dev/null; then
     echo "** Backend is running successfully"
     print_new_line
@@ -76,7 +76,7 @@ check_backend() {
 
 check_frontend() {
   # Check if the frontend is running
-  echo "## Checking if the frontend is running"
+  echo "## Checking if frontend is running"
   if curl -k https://localhost/login | grep "Peliqan" > /dev/null; then
     echo "** Frontend is running successfully"
     print_new_line
@@ -90,7 +90,7 @@ check_frontend() {
 
 # Check if the services are running
 check_if_services_are_running() {
-  echo "#### Checking if the services are running"
+  echo "#### Checking if services are running"
 
   # Check if backend is up
   check_backend
@@ -98,7 +98,7 @@ check_if_services_are_running() {
   check_frontend
 
   print_new_line
-  echo "All services are ready. You can access the service at https://${PUBLIC_INGRESS_HOSTNAME}"
+  echo "All services ready. You can access the service at https://${PUBLIC_INGRESS_HOSTNAME}"
 }
 
 

@@ -103,6 +103,8 @@ check_if_services_are_running() {
 
 
 entry_point() {
+  # Load the environment variables
+  source .env
   # Handle user command input
   case $1 in
     "pre-requests-check")

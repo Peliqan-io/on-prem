@@ -85,7 +85,7 @@ Contact Peliqan to receive credentials, in order to deploy Peliqan in your priva
 
 # Post Installation
 
-## Adding Postgres connector.
+## Adding Postgres connector
 - Open the browser and navigate to the `PUBLIC_BACKOFFICE_URL` to access the Peliqan server backoffice.
 - Login to the backoffice with the admin credentials.
 - Go to `Connectors` -> `Create Connector` to create a new connector. And fill the following fields.

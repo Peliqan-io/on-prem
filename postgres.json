@@ -1,0 +1,73 @@
+{
+    "icon_url": "https://app.eu.peliqan.io/img/db/postgres.svg",
+    "category": "Database",
+    "data_model": {
+        "tables": []
+    },
+    "created_on": "2024-04-16T20:20:30.026735Z",
+    "updated_on": "2024-04-16T20:20:30.047954Z",
+    "name": "Postgres",
+    "settings": {
+        "connect_form": {
+            "fields": {
+                "host": {
+                    "show": true,
+                    "label": "Host",
+                    "required": true
+                },
+                "port": {
+                    "show": true,
+                    "label": "Port",
+                    "defaultvalue": "5432"
+                },
+                "param1": {
+                    "show": true,
+                    "type": "input",
+                    "label": "Target database",
+                    "helptext": "Optional, only set if this connection will be used as a DW Target.",
+                    "required": false
+                },
+                "param2": {
+                    "show": false,
+                    "required": false
+                },
+                "param3": {
+                    "show": false,
+                    "required": false
+                },
+                "param4": {
+                    "show": false,
+                    "required": false
+                },
+                "param5": {
+                    "show": false,
+                    "required": false
+                },
+                "param6": {
+                    "show": false,
+                    "required": false
+                },
+                "password": {
+                    "show": true,
+                    "label": "Password",
+                    "required": true
+                },
+                "username": {
+                    "show": true,
+                    "label": "Username",
+                    "required": true
+                }
+            },
+            "helptext": "Default port: 5432."
+        }
+    },
+    "server_type": "postgres",
+    "connector_name": "POSTGRES",
+    "adapter_name": "postgres",
+    "order": 100,
+    "script": "",
+    "details_url": "",
+    "color": "#dae7f1",
+    "available": "LIVE",
+    "example_catalog": {}
+}

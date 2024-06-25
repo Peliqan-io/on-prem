@@ -33,9 +33,17 @@ Contact Peliqan to receive credentials, in order to deploy Peliqan in your priva
   - If you have a certificate file, you can use it to set up SSL.
   - If you don't have a certificate file, you can generate self-singed certificate using the following command.
   ```bash
-  openssl req -x509 -newkey rsa:4096 -keyout certificate.key -out certificate.crt -days 365
+  # Generate certificate key
+  openssl genrsa -out certificate.key 2048
+  
+  # Generate certificate signing request, fill the required fields.
+  # NOTE : Common Name should be the Domain / IP / Hostname of the server.
+  # NOTE : Leave the challenge password empty.
+  openssl req -new -sha256 -key certificate.key -out csr.csr
+  
+  # Generate certificate using the certificate key and certificate signing request.
+  openssl req -x509 -sha256 -days 365 -key certificate.key -in csr.csr -out certificate.crt
   ```
-
 
 - Configure Peliqan server environment variables.
   - Create `.env` by making a copy of `.env.example` file.
@@ -65,18 +73,29 @@ Contact Peliqan to receive credentials, in order to deploy Peliqan in your priva
   - `AES_SECRET_KEY` : Expecting 128 bits key ( 16 bytes ) for AES encryption. Generate key using the following command.
   ```bash
   openssl enc -aes-128-cbc -k secret -P -md sha1
+  
+  # Example Output:
+  # salt=A5F19EC95D22225E
+  # key=33EDE25AD6F7FDF6B7CC80573E5BD173 ---> copy this and put in env file
+  # iv =930BECC898006DD70E83B7995EE8F1A5
   ```
   - `PUBLIC_INGRESS_HOSTNAME` : Ingress hostname ( default : `localhost` ), replace `localhost` with your Domain / IP / Hostname.
 
 # Installation
 - Run the following command to check if all the pre-requests are installed
   ```bash
-  ./local.sh pre-requests-check
+  ./local.sh check
   ```
 - Run the following command to start the Peliqan server
   ```bash
   ./local.sh start
   ```
+
+# Post Installation
+
+- 
+
+# Maintenance
 - Run the following command to stop the Peliqan server
   ```bash
   ./local.sh down
@@ -89,14 +108,3 @@ Contact Peliqan to receive credentials, in order to deploy Peliqan in your priva
   ```bash
   ./local.sh destroy
   ```
-
-# Post Installation
-
-## Adding Postgres connector
-- Open the browser and navigate to the `PUBLIC_BACKOFFICE_URL` to access the Peliqan server backoffice.
-- Login to the backoffice with the admin credentials.
-- Go to `Connectors` -> `Create Connector` to create a new connector. And fill the following fields.
-  - `Connector Name` : `Postgres`
-  - `Connector Type` : `postgres`
-- Click on the `Edit Json` button to edit the connector configuration.
-- Copy and paste the contents of `postgres.json` to the editor and click on the `Update` button.

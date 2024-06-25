@@ -107,7 +107,7 @@ entry_point() {
   source .env
   # Handle user command input
   case $1 in
-    "pre-requests-check")
+    "check")
       # Check all the pre-requests are installed
       check_docker_installation
       print_new_line

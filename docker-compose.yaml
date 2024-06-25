@@ -55,7 +55,7 @@ services:
       - PUBLIC_BACKEND_URL=${PUBLIC_BACKEND_URL:-http://localhost:8000}
       - PUBLIC_WEB_FRONTEND_URL=${PUBLIC_WEB_FRONTEND_URL:-http://localhost:3000}
       - MIGRATE_ON_STARTUP=${MIGRATE_ON_STARTUP:-true}
-      - LOAD_SERVER_DEFINITIONS=${LOAD_SERVER_DEFINITIONS:-false}
+      - LOAD_SERVER_DEFINITIONS=${LOAD_SERVER_DEFINITIONS:-true}
       - SYNC_TEMPLATES_ON_STARTUP=${SYNC_TEMPLATES_ON_STARTUP:-false}
       - DATABASE_USER=${DATABASE_USER:-peliqan}
       - DATABASE_PASSWORD=${DATABASE_PASSWORD:-peliqan}
@@ -90,6 +90,7 @@ services:
       - streamlit_apps:/etc/streamlit_apps
       - connector_icons:/etc/connector_icons
       - singerDependencies:/etc/.virtualenvs/
+      - ./definitions:/etc/connectors/definitions
     networks:
       local:
     restart: always
@@ -104,7 +105,6 @@ services:
       - PUBLIC_BACKEND_URL=${PUBLIC_BACKEND_URL:-http://localhost:8000}
       - PUBLIC_WEB_FRONTEND_URL=${PUBLIC_WEB_FRONTEND_URL:-http://localhost:3000}
       - MIGRATE_ON_STARTUP=${MIGRATE_ON_STARTUP:-true}
-      - LOAD_SERVER_DEFINITIONS=${LOAD_SERVER_DEFINITIONS:-true}
       - SYNC_TEMPLATES_ON_STARTUP=${SYNC_TEMPLATES_ON_STARTUP:-false}
       - DATABASE_USER=${DATABASE_USER:-peliqan}
       - DATABASE_PASSWORD=${DATABASE_PASSWORD:-peliqan}
@@ -145,7 +145,6 @@ services:
       - PUBLIC_BACKEND_URL=${PUBLIC_BACKEND_URL:-http://localhost:8000}
       - PUBLIC_WEB_FRONTEND_URL=${PUBLIC_WEB_FRONTEND_URL:-http://localhost:3000}
       - MIGRATE_ON_STARTUP=${MIGRATE_ON_STARTUP:-true}
-      - LOAD_SERVER_DEFINITIONS=${LOAD_SERVER_DEFINITIONS:-true}
       - SYNC_TEMPLATES_ON_STARTUP=${SYNC_TEMPLATES_ON_STARTUP:-false}
       - DATABASE_USER=${DATABASE_USER:-peliqan}
       - DATABASE_PASSWORD=${DATABASE_PASSWORD:-peliqan}
@@ -180,7 +179,6 @@ services:
       - PUBLIC_BACKEND_URL=${PUBLIC_BACKEND_URL:-http://localhost:8000}
       - PUBLIC_WEB_FRONTEND_URL=${PUBLIC_WEB_FRONTEND_URL:-http://localhost:3000}
       - MIGRATE_ON_STARTUP=${MIGRATE_ON_STARTUP:-true}
-      - LOAD_SERVER_DEFINITIONS=${LOAD_SERVER_DEFINITIONS:-true}
       - SYNC_TEMPLATES_ON_STARTUP=${SYNC_TEMPLATES_ON_STARTUP:-false}
       - DATABASE_USER=${DATABASE_USER:-peliqan}
       - DATABASE_PASSWORD=${DATABASE_PASSWORD:-peliqan}
@@ -220,7 +218,6 @@ services:
       - PUBLIC_BACKEND_URL=${PUBLIC_BACKEND_URL:-http://localhost:8000}
       - PUBLIC_WEB_FRONTEND_URL=${PUBLIC_WEB_FRONTEND_URL:-http://localhost:3000}
       - MIGRATE_ON_STARTUP=${MIGRATE_ON_STARTUP:-true}
-      - LOAD_SERVER_DEFINITIONS=${LOAD_SERVER_DEFINITIONS:-true}
       - SYNC_TEMPLATES_ON_STARTUP=${SYNC_TEMPLATES_ON_STARTUP:-false}
       - DATABASE_USER=${DATABASE_USER:-peliqan}
       - DATABASE_PASSWORD=${DATABASE_PASSWORD:-peliqan}
@@ -268,7 +265,6 @@ services:
       - PUBLIC_BACKEND_URL=${PUBLIC_BACKEND_URL:-http://localhost:8000}
       - PUBLIC_WEB_FRONTEND_URL=${PUBLIC_WEB_FRONTEND_URL:-http://localhost:3000}
       - MIGRATE_ON_STARTUP=${MIGRATE_ON_STARTUP:-true}
-      - LOAD_SERVER_DEFINITIONS=${LOAD_SERVER_DEFINITIONS:-true}
       - SYNC_TEMPLATES_ON_STARTUP=${SYNC_TEMPLATES_ON_STARTUP:-false}
       - DATABASE_USER=${DATABASE_USER:-peliqan}
       - DATABASE_PASSWORD=${DATABASE_PASSWORD:-peliqan}

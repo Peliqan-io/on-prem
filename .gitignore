@@ -2,3 +2,4 @@
 .idea
 certificate.crt
 certificate.key
+csr.csr

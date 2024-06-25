@@ -102,6 +102,19 @@ Contact Peliqan to receive credentials, in order to deploy Peliqan in your priva
     - Email : `admin@peliqan.io` - ( as per the `.env` file )
     - Password : `Admin&!0` - ( as per the `.env` file )
 
+
+
+- Install additional packages in data-app 
+  ```bash
+  # get name of data-app docker container
+  docker ps | grep data-app 
+  
+  # Replace peliqan-on-prem-data-app-1 with the name of the data-app container
+  docker exec peliqan-on-prem-data-app-1 pip install xxx
+  
+  # NOTE : Any additional packages installed using the above command will be lost when the container is restarted.
+  ```
+
 # Maintenance
 - Run the following command to stop the Peliqan server
   ```bash

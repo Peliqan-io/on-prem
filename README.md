@@ -8,6 +8,13 @@ Contact Peliqan to receive credentials, in order to deploy Peliqan in your priva
 - [Post Installation](#post-installation)
 
 # Prerequisites
+- Clone the repo
+    ```bash
+    git clone https://github.com/Peliqan-io/on-prem.git peliqan-on-prem
+    cd peliqan-on-prem
+    ```
+  
+
 - Docker
   - Installation docs : `https://docs.docker.com/engine/install/`
   

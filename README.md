@@ -93,7 +93,14 @@ Contact Peliqan to receive credentials, in order to deploy Peliqan in your priva
 
 # Post Installation
 
-- 
+- Login to the Peliqan server using the following URL
+  ```bash
+  # localhost should be replaced with your Domain / IP / Hostname
+  https://localhost
+  ```
+  - Use the following credentials to login to the Peliqan server.
+    - Email : `admin@peliqan.io` - ( as per the `.env` file )
+    - Password : `Admin&!0` - ( as per the `.env` file )
 
 # Maintenance
 - Run the following command to stop the Peliqan server

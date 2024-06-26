@@ -108,7 +108,7 @@ entry_point() {
   # Handle user command input
   case $1 in
     "check")
-      # Check all the pre-requests are installed
+      # Check all the prerequisites are installed
       check_docker_installation
       print_new_line
       check_docker_compose_installation
